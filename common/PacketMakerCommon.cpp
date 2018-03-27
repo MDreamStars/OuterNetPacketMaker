@@ -366,3 +366,24 @@ void PacketMakerCommon::removeDirAndFiles(const QString& strFileDir)
     dir.rmdir(".");/*删除目标文件夹,如果只是清空文件夹folderFullPath的内容而不删除folderFullPath本身,则删掉本行即可*/
 }
 
+PackeThreadMutex::PackeThreadMutex()
+	:QMutex()
+{
+
+}
+
+PackeThreadMutex::~PackeThreadMutex()
+{
+
+}
+
+PackeThreadMutexLocker::PackeThreadMutexLocker(PackeThreadMutex* pMutex)
+	:QMutexLocker(pMutex)
+{
+
+}
+
+PackeThreadMutexLocker::~PackeThreadMutexLocker()
+{
+
+}

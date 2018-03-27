@@ -12,6 +12,7 @@
 #include <QString>
 #include <QCoreApplication>
 #include <QFile>
+#include <QMutex>
 
 typedef void(*logFun)(const QString&);
 
@@ -103,7 +104,8 @@ struct PacketMakerConfigInfo
 
 struct AutomaticPacketMakerPublicParame
 {
-    QString strInstallFilePath;
+    QString strx86InstallFilePath;
+	QString strx64InstallFilePath;
     QString strRulesFilePath;
     QString strUserName;
     QString strUserPassWord;
@@ -112,7 +114,8 @@ struct AutomaticPacketMakerPublicParame
 
     AutomaticPacketMakerPublicParame()
     {
-        strInstallFilePath = "";
+		strx86InstallFilePath = "";
+		strx64InstallFilePath = "";
         strRulesFilePath = "";
         strUserName = "";
         strUserPassWord = "";
@@ -127,6 +130,13 @@ enum fileType
     typeIsZip,
     typeIsDir,
     typeIsExe
+};
+
+//外网包位数
+enum outPackByte
+{
+	X86_Pack,
+	X64_Pack
 };
 
 class Q_DECL_EXPORT PacketMakerCommon
@@ -152,3 +162,19 @@ private:
     static bool isZipStream(QFile *stream);
     static void removeDirAndFiles(const QString& strFileDir);
 };
+
+
+class Q_DECL_EXPORT PackeThreadMutex : public QMutex
+{
+public:
+	PackeThreadMutex();
+	~PackeThreadMutex();
+};
+
+class Q_DECL_EXPORT PackeThreadMutexLocker : public QMutexLocker
+{
+public:
+	PackeThreadMutexLocker(PackeThreadMutex* pMutex);
+	~PackeThreadMutexLocker();
+};
+

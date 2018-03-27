@@ -32,10 +32,31 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PacketMakerCmdTask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Bin\OuterNetPacketMakerTask.lib">
       <Filter>lib</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="main.cbt">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GeneratedFiles\Debug\main.moc">
+      <Filter>Generated Files</Filter>
+    </None>
+    <None Include="GeneratedFiles\Release\main.moc">
+      <Filter>Generated Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PacketMakerCmdTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

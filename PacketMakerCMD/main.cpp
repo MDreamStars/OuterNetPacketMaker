@@ -8,13 +8,9 @@
 *Copyright (c) 1998-2018 Glodon Corporation
 */
 #include <QtCore/QCoreApplication>
-#include <..\OuterNetPacketMakerTask\OuterNetPakcetMakerTask.h>
-#include "..\common\PacketMakerCommon.h"
 #include <iostream>
-#include <QObject>
 #include <map>
-#include <QTextStream>
-#include <QSettings>
+#include "PacketMakerCmdTask.h"
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1600)    
 # pragma execution_character_set("utf-8")    
@@ -24,23 +20,23 @@ using namespace std;
 
 bool loadPacketMakerInfo(QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
 {
-    if (strParameterList.size() < 10)
-    {
-        return false;
-    }
+	if (strParameterList.size() < 10)
+	{
+		return false;
+	}
 
-    outInfo.strInstallFilePath = strParameterList.at(0);
-    outInfo.strRulesFilePath = strParameterList.at(1);
-    outInfo.strOuterNetPacketName = strParameterList.at(2);
-    outInfo.bIsCoverInstall = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
-    outInfo.bIsUninstall = strParameterList.at(4).toLower().compare("true") == 0 ? true : false;
-    outInfo.bIsOnlineSum = strParameterList.at(5).toLower().compare("true") == 0 ? true : false;
-    outInfo.strRegionRules = strParameterList.at(6);
-    outInfo.strUserName = strParameterList.at(7);
-    outInfo.strUserPassWord = strParameterList.at(8);
-    outInfo.strOutPutPath = strParameterList.at(9);
+	outInfo.strInstallFilePath = strParameterList.at(0);
+	outInfo.strRulesFilePath = strParameterList.at(1);
+	outInfo.strOuterNetPacketName = strParameterList.at(2);
+	outInfo.bIsCoverInstall = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
+	outInfo.bIsUninstall = strParameterList.at(4).toLower().compare("true") == 0 ? true : false;
+	outInfo.bIsOnlineSum = strParameterList.at(5).toLower().compare("true") == 0 ? true : false;
+	outInfo.strRegionRules = strParameterList.at(6);
+	outInfo.strUserName = strParameterList.at(7);
+	outInfo.strUserPassWord = strParameterList.at(8);
+	outInfo.strOutPutPath = strParameterList.at(9);
 
-    return true;
+	return true;
 }
 
 //测试使用
@@ -63,198 +59,6 @@ static void setLog(const QString& strLog)
 {
     QString strTemp = QString("==========> %1 <=========").arg(strLog);
     wcout << strTemp.toStdWString() << endl;
-}
-
-/*
-* @brief 自动执行组包
-*
-* @author maozg  2018年1月25日
-*
-* @class AutomaticPacketMaker
-*/
-class AutomaticPacketMaker
-{
-public:
-    AutomaticPacketMaker();
-    ~AutomaticPacketMaker();
-public:
-    void start();
-private:
-    void readConfigFile();
-    void executeTask();
-    bool mergePacketMakerParame(QStringList& strParameterList, PacketMakerConfigInfo& outInfo);
-private:
-    vector<QStringList> m_vecParameList;
-    AutomaticPacketMakerPublicParame m_oPacketMakerPublicParame;
-};
-
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月25日
-*@param
-*@return
-*/
-AutomaticPacketMaker::AutomaticPacketMaker()
-{
-
-}
-
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月25日
-*@param
-*@return
-*/
-AutomaticPacketMaker::~AutomaticPacketMaker()
-{
-
-}
-
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月25日
-*@param
-*@return       void
-*/
-void AutomaticPacketMaker::start()
-{
-    //读取配置文件
-    readConfigFile();
-
-    //执行组包任务
-    executeTask();
-}
-
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月25日
-*@param
-*@return       void
-*/
-void AutomaticPacketMaker::readConfigFile()
-{
-    m_vecParameList.clear();
-    QString strIniPath = PacketMakerCommon::binPath() + "/CMDTaskConfig.ini";
-
-    QFile file(strIniPath);
-    if (!file.open(QFile::ReadOnly))
-    {
-        return;
-    }
-    QTextStream read(&file);
-
-    while (!read.atEnd())
-    {
-        QString strInfo = read.readLine();
-        //判断是否是注释
-        if (strInfo.mid(0, 1).compare(";") == 0)
-        {
-            continue;
-        }
-
-        QStringList strTask = strInfo.split('=');
-        if (strTask.size() < 2)
-        {
-            continue;
-        }
-
-        //读取公共配置
-        if (strTask.at(0).compare("InstallPath") == 0)
-        {
-            m_oPacketMakerPublicParame.strInstallFilePath = strTask.at(1);
-            continue;
-        }
-        else if (strTask.at(0).compare("RulesPath") == 0)
-        {
-            m_oPacketMakerPublicParame.strRulesFilePath = strTask.at(1);
-            continue;
-        }
-        else if (strTask.at(0).compare("Account") == 0)
-        {
-            m_oPacketMakerPublicParame.strUserName = strTask.at(1);
-            continue;
-        }
-        else if (strTask.at(0).compare("Password") == 0)
-        {
-            m_oPacketMakerPublicParame.strUserPassWord = strTask.at(1);
-            continue;
-        }
-        else if (strTask.at(0).compare("OutPutPath") == 0)
-        {
-            m_oPacketMakerPublicParame.strOutPutPath = strTask.at(1);
-            continue;
-        }
-        else if (strTask.at(0).compare("Byte") == 0)
-        {
-            m_oPacketMakerPublicParame.strByte = strTask.at(1);
-            continue;
-        }
-
-        QStringList strTaskParame = strTask.at(1).split(';');
-
-        m_vecParameList.push_back(strTaskParame);
-    }
-
-    file.close();
-}
-
-/*!
-*@brief        执行任务
-*@author       maozg
-*@time         2018年1月25日
-*@param
-*@return       void
-*/
-void AutomaticPacketMaker::executeTask()
-{
-    for (int i =0; i < m_vecParameList.size(); ++i)
-    {
-        QStringList strTaskParame = m_vecParameList.at(i);
-
-        PacketMakerConfigInfo packetMakerInfo;
-        //组合参数列表
-        if (!mergePacketMakerParame(strTaskParame, packetMakerInfo))
-        {
-            continue;
-        }
-
-        wcout << QString("=====>开始执行%1规则组包任务...").arg(packetMakerInfo.strRegionRules).toStdWString() << endl;
-        wcout << QString("=====>开始组外网安装包...").toStdWString() << endl;
-        OutNetPacketMakerCMD cmdExe(packetMakerInfo, setLog);
-        cmdExe.startPacketMaker();
-    }
-}
-
-/*!
-*@brief        组合组包参数参数
-*@author       maozg
-*@time         2018年1月29日
-*@param        QStringList& strParameterList, PacketMakerConfigInfo& outInfo
-*@return       bool
-*/
-bool AutomaticPacketMaker::mergePacketMakerParame(QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
-{
-    if (strParameterList.size() < 5)
-    {
-        return false;
-    }
-
-    outInfo.strInstallFilePath = m_oPacketMakerPublicParame.strInstallFilePath;
-    outInfo.strRulesFilePath = m_oPacketMakerPublicParame.strRulesFilePath;
-    outInfo.strOuterNetPacketName = strParameterList.at(0) + m_oPacketMakerPublicParame.strByte;
-    outInfo.bIsCoverInstall = strParameterList.at(1).toLower().compare("true") == 0 ? true : false;
-    outInfo.bIsUninstall = strParameterList.at(2).toLower().compare("true") == 0 ? true : false;
-    outInfo.bIsOnlineSum = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
-    outInfo.strRegionRules = strParameterList.at(4);
-    outInfo.strUserName = m_oPacketMakerPublicParame.strUserName;
-    outInfo.strUserPassWord = m_oPacketMakerPublicParame.strUserPassWord;
-    outInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath;
-
-    return true;
 }
 
 int main(int argc, char *argv[])
@@ -301,7 +105,7 @@ int main(int argc, char *argv[])
     else
     {
         //按照配置文件的配置，自动执行组包
-        AutomaticPacketMaker().start();
+        AutomaticPacketMaker(setLog).start();
     }
 
     return 0;
