@@ -44,6 +44,7 @@ private:
     PacketMakerConfigInfo m_oPacketMakerInfo;
     QString m_strInstallFilePath;
 	PackeThreadMutex m_oMutex;
+	QString m_strWorkPath;
 };
 
 /*

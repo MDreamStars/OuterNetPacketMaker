@@ -13,6 +13,7 @@
 #include "CheckInstallPackageTask.h"
 #include <QDir>
 #include <windows.h>
+#include <QProcess>
 
 /*!
 *@brief
@@ -32,7 +33,6 @@ OuterNetPakcetMakerTask::OuterNetPakcetMakerTask(PacketMakerConfigInfo& packetIn
     {
         m_strInstallFilePath = PacketMakerCommon::binPath() + "/" + m_oPacketMakerInfo.strOuterNetPacketName;
     }
-    
 }
 
 /*!
@@ -138,7 +138,7 @@ void OuterNetPakcetMakerTask::runPacketMakerSignatureTask()
 
     emit setLog(Chinese("合并处理后的安装包"), 60);
     //执行组包
-    if (!PacketMakerCommon::mergerMakerCmd(m_strInstallFilePath, strExeName, m_oPacketMakerInfo.strUserName,
+    if (!mergerMakerCmd(m_strInstallFilePath, strExeName, m_oPacketMakerInfo.strUserName,
         m_oPacketMakerInfo.strUserPassWord))
     {
         return;

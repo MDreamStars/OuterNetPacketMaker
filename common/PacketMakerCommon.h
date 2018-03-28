@@ -139,31 +139,6 @@ enum outPackByte
 	X64_Pack
 };
 
-class Q_DECL_EXPORT PacketMakerCommon
-{
-public:
-    //获取当前exe的路径
-    static QString binPath() { return QCoreApplication::applicationDirPath(); };
-    static fileType checkFileType(const QString &strFile);
-    static QString findFilesDirPath(const QString& strDir, const QString& strDirName);
-
-    //组外网包
-    static bool mergerMakerCmd(const QString& strSrcInstall, const QString& strNewInstall,
-        const QString& strUserName, const QString& strPassWard);
-    //签名安装包
-    static bool signInstallPacket(const QString& strInstallPath);
-    
-    //删除文件目录
-    static bool removeDir(const QString& strDir);
-    //检查目录是否存在，如果不存在就创建一个
-    static void checkDirExists(const QString& strDir);
-private:
-    static bool isZipFile(const QString &file);
-    static bool isZipStream(QFile *stream);
-    static void removeDirAndFiles(const QString& strFileDir);
-};
-
-
 class Q_DECL_EXPORT PackeThreadMutex : public QMutex
 {
 public:
@@ -178,3 +153,29 @@ public:
 	~PackeThreadMutexLocker();
 };
 
+class Q_DECL_EXPORT PacketMakerCommon
+{
+public:
+    //获取当前exe的路径
+    static QString binPath() { return QCoreApplication::applicationDirPath(); };
+    static fileType checkFileType(const QString &strFile);
+    static QString findFilesDirPath(const QString& strDir, const QString& strDirName);
+
+    //组外网包
+//     static bool mergerMakerCmd(const QString& strWorkPath, const QString& strSrcInstall, const QString& strNewInstall,
+//         const QString& strUserName, const QString& strPassWard);
+    //签名安装包
+    static bool signInstallPacket(const QString& strInstallPath);
+    
+    //删除文件目录
+    static bool removeDir(const QString& strDir);
+    //检查目录是否存在，如果不存在就创建一个
+    static void checkDirExists(const QString& strDir);
+private:
+    static bool isZipFile(const QString &file);
+    static bool isZipStream(QFile *stream);
+    static void removeDirAndFiles(const QString& strFileDir);
+};
+
+bool mergerMakerCmd(const QString& strSrcInstall, const QString& strNewInstall,
+	const QString& strUserName, const QString& strPassWard);

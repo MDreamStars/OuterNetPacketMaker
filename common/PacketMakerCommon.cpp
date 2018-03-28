@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <QProcess>
 
+PackeThreadMutex g_oMutex;
+
 /*!
 *@brief        返回文件类型
 *@author       maozg
@@ -92,42 +94,44 @@ QString PacketMakerCommon::findFilesDirPath(const QString& strDir, const QString
 *@param        const QString& strSrcInstall, const QString& strNewInstall, const QString& strUserName, const QString& strPassWard
 *@return       bool
 */
-bool PacketMakerCommon::mergerMakerCmd(const QString& strSrcInstall, const QString& strNewInstall, 
-    const QString& strUserName, const QString& strPassWard)
-{
-    QProcess pExe;
-
-    QString strExe;
-    strExe.append("\"");
-    strExe.append("MergerMaker.exe");
-    strExe.append("\" \"");
-    strExe.append(strSrcInstall);
-    strExe.append("\" \"");
-    strExe.append(strNewInstall);
-    strExe.append("\" \"");
-    strExe.append(strUserName);
-    strExe.append("\" \"");
-    strExe.append(strPassWard);
-    strExe.append("\"");
-
-    //执行命令
-    pExe.start(strExe);
-
-    if (!pExe.waitForStarted())
-    {
-        pExe.close();
-        return false;
-    }
-
-    if (!pExe.waitForFinished(40000))
-    {
-        pExe.close();
-        return false;
-    }
-
-    pExe.close();
-    return true;
-}
+// bool PacketMakerCommon::mergerMakerCmd(const QString& strWorkPath, const QString& strSrcInstall, const QString& strNewInstall,
+//     const QString& strUserName, const QString& strPassWard)
+// {
+//     QProcess pExe;
+// 
+//     QString strExe;
+// 	QString strCmd = strWorkPath + "/MergerMaker.exe";
+// 
+//     strExe.append("\"");
+//     strExe.append(strCmd);
+//     strExe.append("\" \"");
+//     strExe.append(strSrcInstall);
+//     strExe.append("\" \"");
+//     strExe.append(strNewInstall);
+//     strExe.append("\" \"");
+//     strExe.append(strUserName);
+//     strExe.append("\" \"");
+//     strExe.append(strPassWard);
+//     strExe.append("\"");
+// 
+//     //执行命令
+//     pExe.start(strExe);
+// 
+//     if (!pExe.waitForStarted())
+//     {
+//         pExe.close();
+//         return false;
+//     }
+// 
+//     if (!pExe.waitForFinished(40000))
+//     {
+//         pExe.close();
+//         return false;
+//     }
+// 
+//     pExe.close();
+//     return true;
+// }
 
 /*!
 *@brief        签名安装包
@@ -248,6 +252,44 @@ int posData(int data, int len, const QByteArray &s)
     QString res = QString(s);
     QString des = QString(strData);
     return res.indexOf(des);
+}
+
+bool mergerMakerCmd(const QString& strSrcInstall, const QString& strNewInstall, const QString& strUserName, const QString& strPassWard)
+{
+	PackeThreadMutexLocker oLocker(&g_oMutex);
+	
+	QProcess pExe;
+
+	QString strExe;
+	strExe.append("\"");
+	strExe.append("MergerMaker.exe");
+	strExe.append("\" \"");
+	strExe.append(strSrcInstall);
+	strExe.append("\" \"");
+	strExe.append(strNewInstall);
+	strExe.append("\" \"");
+	strExe.append(strUserName);
+	strExe.append("\" \"");
+	strExe.append(strPassWard);
+	strExe.append("\"");
+
+	//执行命令
+	pExe.start(strExe);
+
+	if (!pExe.waitForStarted())
+	{
+		pExe.close();
+		return false;
+	}
+
+	if (!pExe.waitForFinished(40000))
+	{
+		pExe.close();
+		return false;
+	}
+
+	pExe.close();
+	return true;
 }
 
 /*!

@@ -1,5 +1,6 @@
 #include "PacketMakerCmdTask.h"
 #include <windows.h>
+#include <QSettings>
 
 PacketMakerConfigInfoIterator::PacketMakerConfigInfoIterator(vector<PacketMakerConfigInfo>& taskList)
 	:m_oTaskList(taskList), m_nPost(0)
@@ -45,7 +46,7 @@ void PacketMakerConfigInfoIterator::first()
 *@return
 */
 AutomaticPacketMaker::AutomaticPacketMaker(logFun pFun)
-	:m_pTaskIterator(nullptr), m_pLogFun(pFun)
+	:m_pTaskIterator(nullptr), m_pLogFun(pFun), m_isUseThread(true)
 {
 
 }
@@ -77,6 +78,8 @@ void AutomaticPacketMaker::start()
 {
 	//读取配置文件
 	readConfigFile();
+
+	readThreadConfig();
 
 	//执行组包任务
 	executeTask();
@@ -172,6 +175,25 @@ void AutomaticPacketMaker::readConfigFile()
 	file.close();
 }
 
+void AutomaticPacketMaker::readThreadConfig()
+{
+	QString strThreadini = PacketMakerCommon::binPath() + "/thread.ini";
+	QSettings config(strThreadini, QSettings::IniFormat);
+	config.beginGroup("Thread");
+
+	QString strIsThread = config.value("useThread").toString();
+	if (strIsThread.toLower() == "true")
+	{
+		m_isUseThread = true;
+	}
+	else if (strIsThread.toLower() == "false")
+	{
+		m_isUseThread = false;
+	}
+
+	config.endGroup();
+}
+
 /*!
 *@brief        执行任务
 *@author       maozg
@@ -185,6 +207,94 @@ void AutomaticPacketMaker::executeTask()
 	createTask(X86_Pack);
 	createTask(X64_Pack);
 
+	if (m_isUseThread)
+	{
+		//使用多线程
+		executeThread();
+	}
+	else
+	{
+		for (size_t i = 0; i < m_oTaskList.size(); ++i)
+		{
+			//阻塞式组包
+			QString strLog = Chinese("=====>开始执行%1规则组包任务...").arg(m_oTaskList[i].strRegionRules);
+			m_pLogFun(strLog);
+
+			OutNetPacketMakerCMD cmdExe(m_oTaskList[i], m_pLogFun);
+			cmdExe.startPacketMaker();
+		}
+	}
+}
+
+/*!
+*@brief        组合组包参数参数
+*@author       maozg
+*@time         2018年1月29日
+*@param        QStringList& strParameterList, PacketMakerConfigInfo& outInfo
+*@return       bool
+*/
+bool AutomaticPacketMaker::mergePacketMakerParame(QString& strByte, QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
+{
+	if (strParameterList.size() < 5)
+	{
+		return false;
+	}
+
+	outInfo.strRulesFilePath = m_oPacketMakerPublicParame.strRulesFilePath;
+	outInfo.strOuterNetPacketName = strParameterList.at(0) + strByte;
+	outInfo.bIsCoverInstall = strParameterList.at(1).toLower().compare("true") == 0 ? true : false;
+	outInfo.bIsUninstall = strParameterList.at(2).toLower().compare("true") == 0 ? true : false;
+	outInfo.bIsOnlineSum = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
+	outInfo.strRegionRules = strParameterList.at(4);
+	outInfo.strUserName = m_oPacketMakerPublicParame.strUserName;
+	outInfo.strUserPassWord = m_oPacketMakerPublicParame.strUserPassWord;
+
+	return true;
+}
+
+void AutomaticPacketMaker::createTask(outPackByte packByte)
+{
+	QString strInstallPath = "";
+	QString strByte = "";
+	QString strTaskByte = "";
+
+	switch (packByte)
+	{
+	case X86_Pack:
+		strInstallPath = m_oPacketMakerPublicParame.strx86InstallFilePath;
+		strByte = Chinese("32位");
+		strTaskByte = "X86";
+		break;
+	case X64_Pack:
+		strInstallPath = m_oPacketMakerPublicParame.strx64InstallFilePath;
+		strByte = Chinese("64位");
+		strTaskByte = "X64";
+		break;
+	default:
+
+		break;
+	}
+
+	for (int i = 0; i < m_vecParameList.size(); ++i)
+	{
+		QStringList strTaskParame = m_vecParameList.at(i);
+
+		PacketMakerConfigInfo packetMakerInfo;
+		packetMakerInfo.strInstallFilePath = strInstallPath;
+		packetMakerInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath + QString("/%1").arg(strTaskByte);
+
+		//组合参数列表
+		if (!mergePacketMakerParame(strByte, strTaskParame, packetMakerInfo))
+		{
+			continue;
+		}
+
+		m_oTaskList.push_back(packetMakerInfo);
+	}
+}
+
+void AutomaticPacketMaker::executeThread()
+{
 	m_pTaskIterator = new PacketMakerConfigInfoIterator(m_oTaskList);
 
 	vector<PackMakeThread*> vecThread;
@@ -225,73 +335,6 @@ void AutomaticPacketMaker::executeTask()
 	vecThread.clear();
 }
 
-/*!
-*@brief        组合组包参数参数
-*@author       maozg
-*@time         2018年1月29日
-*@param        QStringList& strParameterList, PacketMakerConfigInfo& outInfo
-*@return       bool
-*/
-bool AutomaticPacketMaker::mergePacketMakerParame(QString& strByte, QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
-{
-	if (strParameterList.size() < 5)
-	{
-		return false;
-	}
-
-	outInfo.strRulesFilePath = m_oPacketMakerPublicParame.strRulesFilePath;
-	outInfo.strOuterNetPacketName = strParameterList.at(0) + strByte;
-	outInfo.bIsCoverInstall = strParameterList.at(1).toLower().compare("true") == 0 ? true : false;
-	outInfo.bIsUninstall = strParameterList.at(2).toLower().compare("true") == 0 ? true : false;
-	outInfo.bIsOnlineSum = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
-	outInfo.strRegionRules = strParameterList.at(4);
-	outInfo.strUserName = m_oPacketMakerPublicParame.strUserName;
-	outInfo.strUserPassWord = m_oPacketMakerPublicParame.strUserPassWord;
-
-	return true;
-}
-
-void AutomaticPacketMaker::createTask(outPackByte packByte)
-{
-	QString strInstallPath = "";
-	QString strByte = "";
-	QString strTaskByte = "";
-
-	switch (packByte)
-	{
-	case X86_Pack:
-		strInstallPath = m_oPacketMakerPublicParame.strx86InstallFilePath;
-		strByte = "32位";
-		strTaskByte = "X86";
-		break;
-	case X64_Pack:
-		strInstallPath = m_oPacketMakerPublicParame.strx64InstallFilePath;
-		strByte = "64位";
-		strTaskByte = "X64";
-		break;
-	default:
-
-		break;
-	}
-
-	for (int i = 0; i < m_vecParameList.size(); ++i)
-	{
-		QStringList strTaskParame = m_vecParameList.at(i);
-
-		PacketMakerConfigInfo packetMakerInfo;
-		packetMakerInfo.strInstallFilePath = strInstallPath;
-		packetMakerInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath + QString("/%1").arg(strTaskByte);
-
-		//组合参数列表
-		if (!mergePacketMakerParame(strByte, strTaskParame, packetMakerInfo))
-		{
-			continue;
-		}
-
-		m_oTaskList.push_back(packetMakerInfo);
-	}
-}
-
 PackMakeTask::PackMakeTask(AutomaticPacketMaker* pTask)
 	:m_pTask(pTask)
 {
@@ -313,7 +356,7 @@ void PackMakeTask::onRunTask()
 			break;
 		}
 
-		QString strLog = QString("=====>开始执行%1规则组包任务...").arg(pInfo->strRegionRules);
+		QString strLog = Chinese("=====>开始执行%1规则组包任务...").arg(pInfo->strRegionRules);
 		m_pTask->m_pLogFun(strLog);
 
 		OutNetPacketMakerCMD cmdExe(*pInfo, m_pTask->m_pLogFun);

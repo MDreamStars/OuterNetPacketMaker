@@ -42,9 +42,11 @@ public:
 	PacketMakerConfigInfo* getNextTask();
 private:
 	void readConfigFile();
+	void readThreadConfig();
 	void executeTask();
 	bool mergePacketMakerParame(QString& strByte, QStringList& strParameterList, PacketMakerConfigInfo& outInfo);
 	void createTask(outPackByte packByte);
+	void executeThread();
 public:
 	logFun m_pLogFun;
 private:
@@ -53,6 +55,7 @@ private:
 	vector<PacketMakerConfigInfo> m_oTaskList;
 	PacketMakerConfigInfoIterator* m_pTaskIterator;
 	PackeThreadMutex m_oMutex;
+	bool m_isUseThread;
 };
 
 class PackMakeTask : public QObject
