@@ -275,6 +275,11 @@ void AutomaticPacketMaker::createTask(outPackByte packByte)
 		break;
 	}
 
+    if (strInstallPath.isEmpty())
+    {
+        return;
+    }
+
 	for (int i = 0; i < m_vecParameList.size(); ++i)
 	{
 		QStringList strTaskParame = m_vecParameList.at(i);
