@@ -93,6 +93,16 @@ void RegionRulesTask::extractRulesFile()
         {
             QString strFileName = QString("%1%2%3").arg("*").arg(m_strRulesList.at(i)).arg(
                                                    "*.gip");
+
+            //安徽规则有一个合肥的规则，需要单独处理一下
+            if (m_strRulesList.at(i) == Chinese("安徽"))
+            {
+                QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
+                    "*.gip");
+
+                Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strTemp);
+            }
+
             //解压指定地区规则
             Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strFileName);
         }
@@ -162,6 +172,16 @@ void RegionRulesTask::copyRulesFile()
         {
             QString strFileName = QString("%1%2%3").arg("*").arg(m_strRulesList.at(i)).arg(
                 "*.gip");
+
+            //安徽规则有一个合肥的规则，需要单独处理一下
+            if (m_strRulesList.at(i) == Chinese("安徽"))
+            {
+                QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
+                    "*.gip");
+
+                strFilters.append(strTemp);
+            }
+
             strFilters.append(strFileName);
         }
     }
