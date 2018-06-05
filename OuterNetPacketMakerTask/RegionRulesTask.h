@@ -28,7 +28,6 @@ public:
     bool onExecuteTask(QString& strError);
 private:
     void extractRulesFile();
-    void parsRegionRules();
     void copyRulesFile();
     void findFiles(QString& strDir, QStringList& strFilters);
     void addFilePathAndName(QString& strDir, QStringList& strFilters);
@@ -36,7 +35,6 @@ private:
     QString m_strInstallPath;
     QString m_strRulesPath;
     QString m_strRegionRules;
-    QStringList m_strRulesList;
     QString m_strExtractPath;
     bool m_bIsAllRegionRules;   //是否是全国规则
     QStringList m_strRulesFileList;

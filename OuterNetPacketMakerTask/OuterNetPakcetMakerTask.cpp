@@ -35,6 +35,11 @@ OuterNetPakcetMakerTask::OuterNetPakcetMakerTask(PacketMakerConfigInfo& packetIn
     }
 }
 
+OuterNetPakcetMakerTask::OuterNetPakcetMakerTask(vector<PacketMakerConfigInfo>& vecPacketInfo)
+    :m_oTaskList(vecPacketInfo)
+{
+}
+
 /*!
 *@brief
 *@author       maozg
@@ -72,6 +77,46 @@ void OuterNetPakcetMakerTask::onExecuteTask()
     removeAllTempFiles();
 
     emit setLog(Chinese("组包完成"), 100);
+    //发送结束消息
+    emit onTaskFinished();
+}
+
+void OuterNetPakcetMakerTask::onExecuteBatchTask()
+{
+    for (int i = 0; i < m_oTaskList.size(); ++i)
+    {
+        m_oPacketMakerInfo = m_oTaskList.at(i);
+
+        QString strLog = Chinese("开始执行%1规则组包任务...").arg(m_oPacketMakerInfo.strRegionRules);
+        emit setLog(strLog, 10);
+
+        if (m_oPacketMakerInfo.strOuterNetPacketName.isEmpty())
+        {
+            m_strInstallFilePath = PacketMakerCommon::binPath() + "/Install";
+        }
+        else
+        {
+            m_strInstallFilePath = PacketMakerCommon::binPath() + "/" + m_oPacketMakerInfo.strOuterNetPacketName;
+        }
+
+        //解压安装包
+        extractInstallPakect();
+
+        //处理规则
+        runRulesTask();
+
+        //执行检查任务
+        runCheckTask();
+
+        //组包并签名
+        runPacketMakerSignatureTask();
+
+        //删除临时目录
+        removeAllTempFiles();
+
+        emit setLog(Chinese("组包完成"), 100);
+    }
+
     //发送结束消息
     emit onTaskFinished();
 }
@@ -161,7 +206,7 @@ void OuterNetPakcetMakerTask::runPacketMakerSignatureTask()
 */
 bool OuterNetPakcetMakerTask::extractInstallPakect()
 {
-    emit setLog(Chinese("解压安装包压缩文件"), 10);
+    emit setLog(Chinese("解压安装包压缩文件"), 15);
     if (typeIsExe == PacketMakerCommon::checkFileType(m_oPacketMakerInfo.strInstallFilePath))
     {
         return Dll7zUnzipCmd::extractAllFile(m_oPacketMakerInfo.strInstallFilePath, m_strInstallFilePath);
@@ -224,7 +269,7 @@ PacketMakerTaskThread::~PacketMakerTaskThread()
 */
 void PacketMakerTaskThread::run()
 {
-    m_pTask->onExecuteTask();
+    m_pTask->onExecuteBatchTask();
 }
 
 

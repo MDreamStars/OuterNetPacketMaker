@@ -170,9 +170,8 @@ OuterNetPacketMaker::OuterNetPacketMaker(QWidget *parent /*= Q_NULLPTR*/)
     m_pSelectRegionRules(nullptr), m_pOutPutPathEdit(nullptr),
     m_pDomainUserNamEdit(nullptr), m_pPassWordEdit(nullptr), m_pCoverInstall(nullptr),
     m_pUninstall(nullptr), m_pOnlineSumCheckBox(nullptr), m_pSaveUserData(nullptr),
-    m_pPacketMakerTask(nullptr)
+    m_pProgressDlg(nullptr), m_pPacketMakerTask(nullptr)
 {
-    m_pProgressDlg = nullptr;
     loadUserInfo();
     iniUI();
 }
@@ -376,27 +375,6 @@ bool OuterNetPacketMaker::checkInput()
 }
 
 /*!
-*@brief
-*@author       maozg
-*@time         2018年1月5日
-*@param        PacketMakerConfigInfo& packetInfo
-*@return       void
-*/
-void OuterNetPacketMaker::initializeInputData(PacketMakerConfigInfo& packetInfo)
-{
-    packetInfo.strInstallFilePath = m_pInstallEdit->text();
-    packetInfo.strRulesFilePath = m_pRulesPathEdit->text();
-    packetInfo.bIsCoverInstall = m_pCoverInstall->isChecked();
-    packetInfo.bIsUninstall = m_pUninstall->isChecked();
-    packetInfo.bIsOnlineSum = m_pOnlineSumCheckBox->isChecked();
-    packetInfo.bIsSaveUserData = m_pSaveUserData->isChecked();
-    packetInfo.strRegionRules = m_pSelectRegionRules->toPlainText();
-    packetInfo.strUserName = m_pDomainUserNamEdit->text();
-    packetInfo.strUserPassWord = m_pPassWordEdit->text();
-    packetInfo.strOutPutPath = m_pOutPutPathEdit->text();
-}
-
-/*!
 *@brief        加载用户数据
 *@author       maozg
 *@time         2018年1月18日
@@ -437,19 +415,105 @@ void OuterNetPacketMaker::saveUserInfo()
 }
 
 /*!
-*@brief
+*@brief        创建任务
 *@author       maozg
-*@time         2018年1月23日
-*@param        const QString& strLog, int nProgress
+*@time         2018年6月5日
+*@param
 *@return       void
 */
-void OuterNetPacketMaker::onSetProgressValue(const QString& strLog, int nProgress)
+void OuterNetPacketMaker::createTask()
 {
-    if (nullptr != m_pProgressDlg)
+    m_oTaskList.clear();
+    //获取所有需要组包的地区
+    QString strRegion = m_pSelectRegionRules->toPlainText();
+    QStringList strRegionList = strRegion.split(',');
+
+    QString strByte = "";
+    if (m_pX32->isChecked())
     {
-        m_pProgressDlg->setLabelText(strLog);
-        m_pProgressDlg->setValue(nProgress);
+        strByte = Chinese("32位");
     }
+    else if (m_pX64->isChecked())
+    {
+        strByte = Chinese("64位");
+    }
+
+    QString strInstallMode = "";
+    if (m_pCoverInstall->isChecked())
+    {
+        strInstallMode = Chinese("覆盖安装");
+    }
+    else if (m_pUninstall->isChecked())
+    {
+        strInstallMode = Chinese("卸载安装");
+    }
+
+    if (m_pOnlineSumCheckBox->isChecked())
+    {
+        strInstallMode += Chinese("包含联机汇总");
+    }
+    else
+    {
+        strInstallMode += Chinese("不包含联机汇总");
+    }
+
+    for (int i = 0; i < strRegionList.count(); ++i)
+    {
+        PacketMakerConfigInfo oPacketParam;
+        oPacketParam.strInstallFilePath = m_pInstallEdit->text();
+        oPacketParam.strRulesFilePath = m_pRulesPathEdit->text();
+        oPacketParam.bIsCoverInstall = m_pCoverInstall->isChecked();
+        oPacketParam.bIsUninstall = m_pUninstall->isChecked();
+        oPacketParam.bIsOnlineSum = m_pOnlineSumCheckBox->isChecked();
+        oPacketParam.bIsSaveUserData = m_pSaveUserData->isChecked();
+        oPacketParam.strRegionRules = parsRegionRules(strRegionList.at(i));
+        oPacketParam.strUserName = m_pDomainUserNamEdit->text();
+        oPacketParam.strUserPassWord = m_pPassWordEdit->text();
+        oPacketParam.strOuterNetPacketName = QString("%1%2%3%4%5").arg("GTJ2018").arg(oPacketParam.strRegionRules).arg(
+            Chinese("规则")).arg(strInstallMode).arg(strByte);
+        oPacketParam.strOutPutPath = m_pOutPutPathEdit->text() + "/" + strByte;
+
+        m_oTaskList.push_back(oPacketParam);
+    }
+}
+
+/*!
+*@brief
+*@author       maozg
+*@time         2018年1月9日
+*@param
+*@return       void
+*/
+QString OuterNetPacketMaker::parsRegionRules(QString strRegion)
+{
+    //规则库文件名字有带省的也有没有带的，所以解析一下
+    QString strResult = "";
+
+    //如果选择了全国,直接结束
+    if (-1 != strRegion.indexOf(Chinese("全国")))
+    {
+        strResult = Chinese("全国");
+        return strResult;
+    }
+
+    int nIndex1 = strRegion.indexOf(Chinese("市"));
+    int nIndex2 = strRegion.indexOf(Chinese("省"));
+
+    if (-1 != nIndex1)
+    {
+        strResult.append(strRegion.mid(0, nIndex1));
+    }
+    else if (-1 != nIndex2)
+    {
+        strResult.append(strRegion.mid(0, nIndex2));
+    }
+    else
+    {
+        //取前两个字 比如宁夏、新疆、香港等
+        strResult.append(strRegion.mid(0, 2));
+    }
+
+    return strResult;
 }
 
 /*!
@@ -523,16 +587,15 @@ void OuterNetPacketMaker::startPacketMakerBt()
     //保存用户数据
     saveUserInfo();
 
-    //组织输入信息
-    PacketMakerConfigInfo packetInfo;
-    initializeInputData(packetInfo);
+    //创建任务
+    createTask();
 
-    m_pPacketMakerTask = new OuterNetPakcetMakerTask(packetInfo);
+    m_pPacketMakerTask = new OuterNetPakcetMakerTask(m_oTaskList);
     PacketMakerTaskThread* pTaskThread = new PacketMakerTaskThread(m_pPacketMakerTask, this);
 
     connect(pTaskThread, &PacketMakerTaskThread::finished, pTaskThread, &QObject::deleteLater);
     connect(m_pPacketMakerTask, SIGNAL(onTaskFinished()), this, SLOT(onPacketMakerFinished()));
-    connect(m_pPacketMakerTask, SIGNAL(setLog(const QString&,int)), this, SLOT(onSetProgressValue(const QString&, int)));
+    connect(m_pPacketMakerTask, SIGNAL(setLog(const QString&, int)), this, SLOT(onSetProgressValue(const QString&, int)));
 
     m_pStartPacketMakerBt->setEnabled(false);
     m_pExitBt->setEnabled(false);
@@ -553,9 +616,41 @@ void OuterNetPacketMaker::startPacketMakerBt()
     m_pProgressDlg->setFixedSize(260, 80);
     m_pProgressDlg->setWindowModality(Qt::WindowModal);
     m_pProgressDlg->setValue(5);
- 
+
     m_pProgressDlg->show();
     pTaskThread->start();
+}
+
+/*!
+*@brief
+*@author       maozg
+*@time         2018年1月5日
+*@param
+*@return       void
+*/
+void OuterNetPacketMaker::onPacketMakerFinished()
+{
+    m_pStartPacketMakerBt->setEnabled(true);
+    m_pExitBt->setEnabled(true);
+    m_pProgressDlg->hide();
+
+    QMessageBox::information(this, Chinese("外网组包工具"), Chinese("外网安装包组包完成!"),
+        QMessageBox::Ok, QMessageBox::Ok);
+
+    if (nullptr != m_pPacketMakerTask)
+    {
+        delete m_pPacketMakerTask;
+        m_pPacketMakerTask = nullptr;
+    }
+}
+
+void OuterNetPacketMaker::onSetProgressValue(const QString& strLog, int nProgress)
+{
+    if (nullptr != m_pProgressDlg)
+    {
+        m_pProgressDlg->setLabelText(strLog);
+        m_pProgressDlg->setValue(nProgress);
+    }
 }
 
 /*!
@@ -613,29 +708,6 @@ void OuterNetPacketMaker::onSelectRulesComplete()
         m_pRulesWidget->close();
         delete m_pRulesWidget;
         m_pRulesWidget = nullptr;
-    }
-}
-
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月5日
-*@param
-*@return       void
-*/
-void OuterNetPacketMaker::onPacketMakerFinished()
-{
-    m_pStartPacketMakerBt->setEnabled(true);
-    m_pExitBt->setEnabled(true);
-    m_pProgressDlg->hide();
-
-    QMessageBox::information(this, Chinese("外网组包工具"), Chinese("外网安装包组包完成!"),
-        QMessageBox::Ok, QMessageBox::Ok);
-
-    if (nullptr != m_pPacketMakerTask)
-    {
-        delete m_pPacketMakerTask;
-        m_pPacketMakerTask = nullptr;
     }
 }
 

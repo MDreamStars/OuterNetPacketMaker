@@ -12,6 +12,9 @@
 #include <QObject>
 #include <QThread>
 #include "outnetpacketmakertask_global.h"
+#include <vector>
+
+using namespace std;
 
 /*
 * @brief 组包任务
@@ -25,10 +28,12 @@ class OUTNETPACKETMAKERTASK_EXPORT OuterNetPakcetMakerTask : public QObject
     Q_OBJECT
 public:
     OuterNetPakcetMakerTask(PacketMakerConfigInfo& packetInfo);
+    OuterNetPakcetMakerTask(vector<PacketMakerConfigInfo>& vecPacketInfo);
     ~OuterNetPakcetMakerTask();
 
 public:
     void onExecuteTask();
+    void onExecuteBatchTask();
 
 signals:
     void onTaskFinished();
@@ -45,6 +50,7 @@ private:
     QString m_strInstallFilePath;
 	PackeThreadMutex m_oMutex;
 	QString m_strWorkPath;
+    vector<PacketMakerConfigInfo> m_oTaskList;
 };
 
 /*

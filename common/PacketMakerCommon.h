@@ -106,6 +106,7 @@ struct AutomaticPacketMakerPublicParame
 {
     QString strx86InstallFilePath;
 	QString strx64InstallFilePath;
+    QString strInstallPath;
     QString strRulesFilePath;
     QString strUserName;
     QString strUserPassWord;
@@ -116,6 +117,7 @@ struct AutomaticPacketMakerPublicParame
     {
 		strx86InstallFilePath = "";
 		strx64InstallFilePath = "";
+        strInstallPath = "";
         strRulesFilePath = "";
         strUserName = "";
         strUserPassWord = "";

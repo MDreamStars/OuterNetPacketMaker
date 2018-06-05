@@ -92,9 +92,10 @@ private:
 private:
     void iniUI();
     bool checkInput();
-    void initializeInputData(PacketMakerConfigInfo& packetInfo);
     void loadUserInfo();
     void saveUserInfo();
+    void createTask();
+    QString parsRegionRules(QString strRegion);
 private slots:
     void installPathOpenBt();
     void rulesPathOpenBt();
@@ -105,7 +106,6 @@ private slots:
     void onSelectRulesComplete();
     void onPacketMakerFinished();
     void onSetProgressValue(const QString& strLog, int nProgress);
-
 private:
     DragDropLineEdit * m_pInstallEdit;
     DragDropLineEdit* m_pRulesPathEdit;
@@ -124,7 +124,9 @@ private:
     QString m_strUserName;
     QString m_strPassWord;
     QProgressDialog* m_pProgressDlg;
-
     QRadioButton* m_pX32;
     QRadioButton* m_pX64;
+
+    //组包任务列表
+    vector<PacketMakerConfigInfo> m_oTaskList;
 };

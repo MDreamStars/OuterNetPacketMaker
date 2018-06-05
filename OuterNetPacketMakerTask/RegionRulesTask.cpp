@@ -26,7 +26,16 @@ RegionRulesTask::RegionRulesTask(const QString& strInstallPath, const QString& s
     :m_strInstallPath(strInstallPath), m_strRulesPath(strRulesPath), m_strRegionRules(strRegionRules)
 {
     m_strExtractPath = PacketMakerCommon::findFilesDirPath(strInstallPath, "Files");
-    m_bIsAllRegionRules = false;
+
+    //如果选择了全国,直接结束
+    if (-1 != strRegionRules.indexOf(Chinese("全国")))
+    {
+        m_bIsAllRegionRules = true;
+    }
+    else
+    {
+        m_bIsAllRegionRules = false;
+    }
 }
 
 /*!
@@ -50,9 +59,6 @@ RegionRulesTask::~RegionRulesTask()
 */
 bool RegionRulesTask::onExecuteTask(QString& strError)
 {
-    //解析地区规则
-    parsRegionRules();
-
     //解压规则库文件
     fileType rulesPathType = PacketMakerCommon::checkFileType(m_strRulesPath);
     switch (rulesPathType)
@@ -88,65 +94,20 @@ void RegionRulesTask::extractRulesFile()
     }
     else
     {
-        //当前都是单个地区，后期会有多个地区的，此处优先适配
-        for (int i = 0; i < m_strRulesList.size(); ++i)
+        QString strFileName = QString("%1%2%3").arg("*").arg(m_strRegionRules).arg(
+            "*.gip");
+
+        //安徽规则有一个合肥的规则，需要单独处理一下
+        if (m_strRegionRules == Chinese("安徽"))
         {
-            QString strFileName = QString("%1%2%3").arg("*").arg(m_strRulesList.at(i)).arg(
-                                                   "*.gip");
+            QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
+                "*.gip");
 
-            //安徽规则有一个合肥的规则，需要单独处理一下
-            if (m_strRulesList.at(i) == Chinese("安徽"))
-            {
-                QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
-                    "*.gip");
-
-                Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strTemp);
-            }
-
-            //解压指定地区规则
-            Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strFileName);
+            Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strTemp);
         }
-    }
-}
 
-/*!
-*@brief
-*@author       maozg
-*@time         2018年1月9日
-*@param
-*@return       void
-*/
-void RegionRulesTask::parsRegionRules()
-{
-    //规则库文件名字有带省的也有没有带的，所以解析一下
-    QStringList strRulesList = m_strRegionRules.split(',');
-
-    for (int i = 0; i < strRulesList.size(); ++i)
-    {
-        QString strTemp = strRulesList.at(i);
-        //如果选择了全国,直接结束
-        if (-1 != strTemp.indexOf(Chinese("全国")))
-        {
-            m_bIsAllRegionRules = true;
-            break;
-        }
-        
-        int nIndex1 = strTemp.indexOf(Chinese("市"));
-        int nIndex2 = strTemp.indexOf(Chinese("省"));
-
-        if (-1 != nIndex1)
-        {
-            m_strRulesList.append(strTemp.mid(0, nIndex1));
-        }
-        else if (-1 != nIndex2)
-        {
-            m_strRulesList.append(strTemp.mid(0, nIndex2));
-        }
-        else
-        {
-            //取前两个字 比如宁夏、新疆、香港等
-            m_strRulesList.append(strTemp.mid(0, 2));
-        }
+        //解压指定地区规则
+        Dll7zUnzipCmd::extractSpecifiedFile(m_strRulesPath, m_strExtractPath, strFileName);
     }
 }
 
@@ -167,23 +128,19 @@ void RegionRulesTask::copyRulesFile()
     }
     else
     {
-        //当前都是单个地区，后期会有多个地区的，此处优先适配
-        for (int i = 0; i < m_strRulesList.size(); ++i)
+        QString strFileName = QString("%1%2%3").arg("*").arg(m_strRegionRules).arg(
+            "*.gip");
+
+        //安徽规则有一个合肥的规则，需要单独处理一下
+        if (m_strRegionRules == Chinese("安徽"))
         {
-            QString strFileName = QString("%1%2%3").arg("*").arg(m_strRulesList.at(i)).arg(
+            QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
                 "*.gip");
 
-            //安徽规则有一个合肥的规则，需要单独处理一下
-            if (m_strRulesList.at(i) == Chinese("安徽"))
-            {
-                QString strTemp = QString("%1%2%3").arg("*").arg(Chinese("合肥")).arg(
-                    "*.gip");
-
-                strFilters.append(strTemp);
-            }
-
-            strFilters.append(strFileName);
+            strFilters.append(strTemp);
         }
+
+        strFilters.append(strFileName);
     }
 
     //查找规则文件
