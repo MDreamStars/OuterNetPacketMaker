@@ -12,6 +12,7 @@
 #include <vector>
 #include "..\OuterNetPacketMakerTask\OuterNetPakcetMakerTask.h"
 #include <QProgressDialog>
+#include <QTextEdit>
 
 using namespace std;
 
@@ -108,8 +109,7 @@ private slots:
 private:
     DragDropLineEdit * m_pInstallEdit;
     DragDropLineEdit* m_pRulesPathEdit;
-    DragDropLineEdit* m_pPacketNameEdit;
-    QLineEdit * m_pSelectRegionRules;
+    QTextEdit * m_pSelectRegionRules;
     DragDropLineEdit* m_pOutPutPathEdit;
     QLineEdit* m_pDomainUserNamEdit;
     QLineEdit* m_pPassWordEdit;
@@ -124,4 +124,7 @@ private:
     QString m_strUserName;
     QString m_strPassWord;
     QProgressDialog* m_pProgressDlg;
+
+    QRadioButton* m_pX32;
+    QRadioButton* m_pX64;
 };

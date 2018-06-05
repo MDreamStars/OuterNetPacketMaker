@@ -167,7 +167,7 @@ SelectRulesButton::~SelectRulesButton()
 * * */
 OuterNetPacketMaker::OuterNetPacketMaker(QWidget *parent /*= Q_NULLPTR*/)
     :QWidget(parent), m_pInstallEdit(nullptr), m_pRulesPathEdit(nullptr),
-    m_pPacketNameEdit(nullptr), m_pSelectRegionRules(nullptr), m_pOutPutPathEdit(nullptr),
+    m_pSelectRegionRules(nullptr), m_pOutPutPathEdit(nullptr),
     m_pDomainUserNamEdit(nullptr), m_pPassWordEdit(nullptr), m_pCoverInstall(nullptr),
     m_pUninstall(nullptr), m_pOnlineSumCheckBox(nullptr), m_pSaveUserData(nullptr),
     m_pPacketMakerTask(nullptr)
@@ -192,10 +192,15 @@ void OuterNetPacketMaker::iniUI()
     pa.setColor(QPalette::WindowText, Qt::red);
 
     QVBoxLayout* pMainLayout = new QVBoxLayout(this);
+
+    QHBoxLayout* pPublicItem = new QHBoxLayout(this);
+    QVBoxLayout* pInstallLayout = new QVBoxLayout(this);
+
+    QGroupBox* pPublicGroup = new QGroupBox(Chinese("公共项"), this);
     //输入项
-    QGroupBox* pInputGroup = new QGroupBox(Chinese("输入"), this);
+    QGroupBox* pInputGroup = new QGroupBox(Chinese("路径信息"), this);
     QGridLayout* pInputLayout = new QGridLayout(this);
-    QLabel* pInstallLabel = new QLabel(Chinese("安装包路径*:"), this);
+    QLabel* pInstallLabel = new QLabel(Chinese("安装包*:"), this);
     pInstallLabel->setPalette(pa);
     m_pInstallEdit = new DragDropLineEdit(this);
     QPushButton* pInstallBt = new QPushButton(Chinese("..."), this);
@@ -204,7 +209,7 @@ void OuterNetPacketMaker::iniUI()
     pInputLayout->addWidget(m_pInstallEdit, 0, 1);
     pInputLayout->addWidget(pInstallBt, 0, 2);
 
-    QLabel* pRulesLabel = new QLabel(Chinese("规则库路径*:"), this);
+    QLabel* pRulesLabel = new QLabel(Chinese("规则库*:"), this);
     pRulesLabel->setPalette(pa);
     m_pRulesPathEdit = new DragDropLineEdit(this);
     QPushButton* pRulesBt = new QPushButton(Chinese("..."), this);
@@ -213,14 +218,72 @@ void OuterNetPacketMaker::iniUI()
     pInputLayout->addWidget(m_pRulesPathEdit, 1, 1);
     pInputLayout->addWidget(pRulesBt, 1, 2);
 
-    QLabel* pOuterNetNameLabel = new QLabel(Chinese("外网安装包名称:"), this);
-    m_pPacketNameEdit = new DragDropLineEdit(this);
-    pInputLayout->addWidget(pOuterNetNameLabel, 2, 0);
-    pInputLayout->addWidget(m_pPacketNameEdit, 2, 1);
+    QLabel* pOutPutLabel = new QLabel(Chinese("输出*:"), this);
+    pOutPutLabel->setPalette(pa);
+    m_pOutPutPathEdit = new DragDropLineEdit(this);
+
+    pInputLayout->addWidget(pOutPutLabel);
+    pInputLayout->addWidget(m_pOutPutPathEdit);
+
+    QPushButton* pOutPutBt = new QPushButton("...", this);
+    pOutPutBt->setFixedSize(40, m_pOutPutPathEdit->sizeHint().height());
+    pInputLayout->addWidget(pOutPutBt);
     pInputGroup->setLayout(pInputLayout);
 
+    QGroupBox* pInstallGroup = new QGroupBox(Chinese("安装包位数"), pPublicGroup);
+    QHBoxLayout* pInstallByte = new QHBoxLayout(this);
+    m_pX32 = new QRadioButton(Chinese("32位"), this);
+    m_pX64 = new QRadioButton(Chinese("64位"), this);
+    m_pX32->click();
+
+    pInstallByte->addWidget(m_pX32);
+    pInstallByte->addWidget(m_pX64);
+    pInstallGroup->setLayout(pInstallByte);
+
+    pInstallLayout->addWidget(pInputGroup);
+    pInstallLayout->addWidget(pInstallGroup);
+
+    QGroupBox* pAccountConfig = new QGroupBox(Chinese("域账户信息"), this);
+    QGridLayout* pUserDataLayout = new QGridLayout(this);
+    //域账户
+    QLabel* pDomainUserNamLabel = new QLabel(Chinese("域账户*:"), this);
+    pDomainUserNamLabel->setPalette(pa);
+    m_pDomainUserNamEdit = new QLineEdit(this);
+    if (!m_strUserName.isEmpty())
+    {
+        m_pDomainUserNamEdit->setText(m_strUserName);
+    }
+    pUserDataLayout->addWidget(pDomainUserNamLabel, 0, 1);
+    pUserDataLayout->addWidget(m_pDomainUserNamEdit, 0, 2);
+
+    //域密码
+    QLabel* pPassWordLabel = new QLabel(Chinese("密码*:"), this);
+    pPassWordLabel->setPalette(pa);
+    m_pPassWordEdit = new QLineEdit(this);
+    if (!m_strPassWord.isEmpty())
+    {
+        m_pPassWordEdit->setText(m_strPassWord);
+    }
+    m_pPassWordEdit->setEchoMode(QLineEdit::Password);
+    pUserDataLayout->addWidget(pPassWordLabel, 1, 1);
+    pUserDataLayout->addWidget(m_pPassWordEdit, 1, 2);
+
+    m_pSaveUserData = new QCheckBox(Chinese("记住账户密码"), this);
+    m_pSaveUserData->click();
+    pUserDataLayout->addWidget(m_pSaveUserData, 2, 2);
+    pAccountConfig->setLayout(pUserDataLayout);
+
+
+    pPublicItem->addLayout(pInstallLayout);
+    pPublicItem->setStretchFactor(pInstallLayout, 2);
+    pPublicItem->addWidget(pAccountConfig);
+
+    pPublicGroup->setLayout(pPublicItem);
+
+    QGroupBox* pRegionConfig = new QGroupBox(Chinese("配置"), this);
+    QHBoxLayout* pRegionConfigLayout = new QHBoxLayout(pRegionConfig);
     //配置项
-    QGroupBox* pConfigGroup = new QGroupBox(Chinese("配置"), this);
+    QGroupBox* pConfigGroup = new QGroupBox(Chinese("安装方式配置"), this);
     QVBoxLayout* pConfigLayout = new QVBoxLayout(this);
 
     QHBoxLayout* pInstallConfig = new QHBoxLayout(this);
@@ -234,66 +297,32 @@ void OuterNetPacketMaker::iniUI()
     m_pOnlineSumCheckBox = new QCheckBox(Chinese("携带联机汇总(勾选是携带不选是不带)"), this);
     pConfigLayout->addWidget(m_pOnlineSumCheckBox);
 
-    QHBoxLayout* pSelectRules = new QHBoxLayout(this);
-    QLabel* pSelectRulesLabel = new QLabel(Chinese("选择地区规则*:"), this);
-    pSelectRulesLabel->setPalette(pa);
-    m_pSelectRegionRules = new QLineEdit(this);
-    m_pSelectRegionRules->setReadOnly(true);
-    SelectRulesButton* pSelectBt = new SelectRulesButton(Chinese("..."), m_pSelectRegionRules);
-    pSelectRules->addWidget(pSelectRulesLabel);
-    pSelectRules->addWidget(m_pSelectRegionRules);
-    pConfigLayout->addLayout(pSelectRules);
+    
     pConfigGroup->setLayout(pConfigLayout);
 
-    //输出项
-    QGroupBox* pOutPutGroup = new QGroupBox(Chinese("输出"), this);
+    QGroupBox* pRegion = new QGroupBox(Chinese("地区配置"), pRegionConfig);
+
+    QHBoxLayout* pSelectRules = new QHBoxLayout(this);
+    QLabel* pSelectRulesLabel = new QLabel(Chinese("选择地区*:"), this);
+    pSelectRulesLabel->setPalette(pa);
+    m_pSelectRegionRules = new QTextEdit(this);
+    m_pSelectRegionRules->setReadOnly(true);
+    QPushButton* pSelectBt = new QPushButton(Chinese("..."), this);
+    pSelectBt->setFixedWidth(40);
+
+    pSelectRules->addWidget(pSelectRulesLabel);
+    pSelectRules->addWidget(m_pSelectRegionRules);
+    pSelectRules->addWidget(pSelectBt);
+
+    pRegion->setLayout(pSelectRules);
+
+    
+    pRegionConfigLayout->addWidget(pConfigGroup);
+    pRegionConfigLayout->addWidget(pRegion);
+    pRegionConfig->setLayout(pRegionConfigLayout);
+
+
     QVBoxLayout* pOutPutLayout = new QVBoxLayout(this);
-
-    QGridLayout* pUserDataLayout = new QGridLayout(this);
-    //域账户
-    QLabel* pDomainUserNamLabel = new QLabel(Chinese("域账户*:"), this);
-    pDomainUserNamLabel->setPalette(pa);
-    m_pDomainUserNamEdit = new QLineEdit(this);
-    if (!m_strUserName.isEmpty())
-    {
-        m_pDomainUserNamEdit->setText(m_strUserName);
-    }
-    m_pDomainUserNamEdit->setFixedWidth(150);
-    pUserDataLayout->addWidget(pDomainUserNamLabel, 0, 1/*,1,1,Qt::AlignRight | Qt::AlignVCenter*/);
-    pUserDataLayout->addWidget(m_pDomainUserNamEdit, 0, 2/*, 1, 1, Qt::AlignLeft | Qt::AlignVCenter*/);
-    QSpacerItem* pSpace = new QSpacerItem(700, m_pDomainUserNamEdit->sizeHint().height());
-    pUserDataLayout->addItem(pSpace, 0, 3);
-    QSpacerItem* pSpace2 = new QSpacerItem(80, m_pDomainUserNamEdit->sizeHint().height());
-    pUserDataLayout->addItem(pSpace2, 0, 0);
-
-    //域密码
-    QLabel* pPassWordLabel = new QLabel(Chinese("密码*:"), this);
-    pPassWordLabel->setPalette(pa);
-    m_pPassWordEdit = new QLineEdit(this);
-    if (!m_strPassWord.isEmpty())
-    {
-        m_pPassWordEdit->setText(m_strPassWord);
-    }
-    m_pPassWordEdit->setFixedWidth(150);
-    m_pPassWordEdit->setEchoMode(QLineEdit::Password);
-    pUserDataLayout->addWidget(pPassWordLabel, 1, 1/*,1,1,Qt::AlignRight | Qt::AlignVCenter*/);
-    pUserDataLayout->addWidget(m_pPassWordEdit, 1, 2/*, 1, 1, Qt::AlignLeft | Qt::AlignVCenter*/);
-
-    m_pSaveUserData = new QCheckBox(Chinese("记住账户密码"), this);
-    m_pSaveUserData->click();
-    pUserDataLayout->addWidget(m_pSaveUserData, 2, 2);
-    pOutPutLayout->addLayout(pUserDataLayout);
-
-    QHBoxLayout* pOutPutPathLayout = new QHBoxLayout(this);
-    QLabel* pOutPutLabel = new QLabel(Chinese("外网安装包保存路径*:"), this);
-    pOutPutLabel->setPalette(pa);
-    m_pOutPutPathEdit = new DragDropLineEdit(this);
-    QPushButton* pOutPutBt = new QPushButton("...", this);
-    pOutPutBt->setFixedSize(40, m_pOutPutPathEdit->sizeHint().height());
-    pOutPutPathLayout->addWidget(pOutPutLabel);
-    pOutPutPathLayout->addWidget(m_pOutPutPathEdit);
-    pOutPutPathLayout->addWidget(pOutPutBt);
-    pOutPutLayout->addLayout(pOutPutPathLayout);
 
     QHBoxLayout* pBtLayout = new QHBoxLayout(this);
     QFont font;
@@ -311,11 +340,10 @@ void OuterNetPacketMaker::iniUI()
     pBtLayout->addWidget(m_pExitBt, Qt::AlignVCenter);
     pBtLayout->setSpacing(10);
     pOutPutLayout->addLayout(pBtLayout);
-    pOutPutGroup->setLayout(pOutPutLayout);
-
-    pMainLayout->addWidget(pInputGroup);
-    pMainLayout->addWidget(pConfigGroup);
-    pMainLayout->addWidget(pOutPutGroup);
+   
+    pMainLayout->addWidget(pPublicGroup);
+    pMainLayout->addWidget(pRegionConfig);
+    pMainLayout->addLayout(pOutPutLayout);
 
     //绑定实现函数
     connect(pInstallBt, SIGNAL(clicked()), this, SLOT(installPathOpenBt()));
@@ -326,7 +354,7 @@ void OuterNetPacketMaker::iniUI()
     connect(pSelectBt, SIGNAL(clicked()), this, SLOT(selectRegionRulesBt()));
 
     this->setLayout(pMainLayout);
-    this->setFixedSize(550, 600);
+    this->setFixedSize(600, 450);
 }
 
 /*!
@@ -339,7 +367,7 @@ void OuterNetPacketMaker::iniUI()
 bool OuterNetPacketMaker::checkInput()
 {
     if (m_pInstallEdit->text().isEmpty() || m_pRulesPathEdit->text().isEmpty() ||
-        m_pSelectRegionRules->text().isEmpty() || m_pOutPutPathEdit->text().isEmpty() || 
+        m_pSelectRegionRules->toPlainText().isEmpty() || m_pOutPutPathEdit->text().isEmpty() ||
         m_pDomainUserNamEdit->text().isEmpty() || m_pPassWordEdit->text().isEmpty())
     {
         return false;
@@ -358,12 +386,11 @@ void OuterNetPacketMaker::initializeInputData(PacketMakerConfigInfo& packetInfo)
 {
     packetInfo.strInstallFilePath = m_pInstallEdit->text();
     packetInfo.strRulesFilePath = m_pRulesPathEdit->text();
-    packetInfo.strOuterNetPacketName = m_pPacketNameEdit->text();
     packetInfo.bIsCoverInstall = m_pCoverInstall->isChecked();
     packetInfo.bIsUninstall = m_pUninstall->isChecked();
     packetInfo.bIsOnlineSum = m_pOnlineSumCheckBox->isChecked();
     packetInfo.bIsSaveUserData = m_pSaveUserData->isChecked();
-    packetInfo.strRegionRules = m_pSelectRegionRules->text();
+    packetInfo.strRegionRules = m_pSelectRegionRules->toPlainText();
     packetInfo.strUserName = m_pDomainUserNamEdit->text();
     packetInfo.strUserPassWord = m_pPassWordEdit->text();
     packetInfo.strOutPutPath = m_pOutPutPathEdit->text();
@@ -677,12 +704,20 @@ void RegionRulesSelectWidget::initializeRulesInfo()
 {
     QStringList strHead;
     strHead << Chinese("地区");
+
     int nLength = sizeof(RegionRules) / sizeof(RegionRules[0]);
 
-    m_pRulesTableWidget->setRowCount(nLength);
+    //增加一个全选
+    m_pRulesTableWidget->setRowCount(nLength + 1);
     m_pRulesTableWidget->setColumnCount(1);
     m_pRulesTableWidget->setHorizontalHeaderLabels(strHead);
     m_pRulesTableWidget->horizontalHeader()->setStretchLastSection(true);
+
+    QTableWidgetItem * checkAll = new QTableWidgetItem();
+    m_pRulesTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    checkAll->setCheckState(Qt::Unchecked);
+    checkAll->setText(Chinese("全选"));
+    m_pRulesTableWidget->setItem(0, 0, checkAll);
 
     for (int i = 0; i < nLength; ++i)
     {
@@ -691,7 +726,7 @@ void RegionRulesSelectWidget::initializeRulesInfo()
         check->setCheckState(Qt::Unchecked);
         check->setText(Chinese(RegionRules[i]));
 
-        m_pRulesTableWidget->setItem(i, 0, check);
+        m_pRulesTableWidget->setItem(i + 1, 0, check);
     }
 
     connect(m_pRulesTableWidget, SIGNAL(cellChanged(int, int)), this, SLOT(updataCheckState(int, int)));
@@ -712,15 +747,14 @@ void RegionRulesSelectWidget::updataCheckState(int row, int col)
         {
             for (int i = 1; i < m_pRulesTableWidget->rowCount(); ++i)
             {
-                m_pRulesTableWidget->item(i, col)->setFlags(Qt::NoItemFlags);
-                m_pRulesTableWidget->item(i, col)->setCheckState(Qt::Unchecked);
+                m_pRulesTableWidget->item(i, col)->setCheckState(Qt::Checked);
             }
         }
         else
         {
             for (int i = 1; i < m_pRulesTableWidget->rowCount(); ++i)
             {
-                m_pRulesTableWidget->item(i, col)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsSelectable);
+                m_pRulesTableWidget->item(i, col)->setCheckState(Qt::Unchecked);
             }
         }
     }
@@ -736,18 +770,12 @@ void RegionRulesSelectWidget::updataCheckState(int row, int col)
 void RegionRulesSelectWidget::determineBtClick()
 {
     m_oRulesContainer.clear();
-    if (m_pRulesTableWidget->item(0, 0)->checkState() == Qt::Checked)
+    
+    for (int i = 1; i < m_pRulesTableWidget->rowCount(); ++i)
     {
-        m_oRulesContainer.addItem(RegionRulesEnum(0));
-    }
-    else
-    {
-        for (int i = 1; i < m_pRulesTableWidget->rowCount(); ++i)
+        if (m_pRulesTableWidget->item(i, 0)->checkState() == Qt::Checked)
         {
-            if (m_pRulesTableWidget->item(i, 0)->checkState() == Qt::Checked)
-            {
-                m_oRulesContainer.addItem(RegionRulesEnum(i));
-            }
+            m_oRulesContainer.addItem(RegionRulesEnum(i - 1));
         }
     }
 
