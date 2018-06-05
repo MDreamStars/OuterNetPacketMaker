@@ -256,19 +256,16 @@ void AutomaticPacketMaker::createTask(outPackByte packByte)
 {
 	QString strInstallPath = "";
 	QString strByte = "";
-	QString strTaskByte = "";
 
 	switch (packByte)
 	{
 	case X86_Pack:
 		strInstallPath = m_oPacketMakerPublicParame.strx86InstallFilePath;
 		strByte = Chinese("32位");
-		strTaskByte = "X86";
 		break;
 	case X64_Pack:
 		strInstallPath = m_oPacketMakerPublicParame.strx64InstallFilePath;
 		strByte = Chinese("64位");
-		strTaskByte = "X64";
 		break;
 	default:
 
@@ -286,7 +283,7 @@ void AutomaticPacketMaker::createTask(outPackByte packByte)
 
 		PacketMakerConfigInfo packetMakerInfo;
 		packetMakerInfo.strInstallFilePath = strInstallPath;
-		packetMakerInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath + QString("/%1").arg(strTaskByte);
+		packetMakerInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath + QString("/%1").arg(strByte);
 
 		//组合参数列表
 		if (!mergePacketMakerParame(strByte, strTaskParame, packetMakerInfo))
