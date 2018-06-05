@@ -223,9 +223,10 @@ void CheckConfigTask::modifyFilesConfig()
     str2017GipSet.insert("GTJ2017.gip");
     str2017GipSet.insert("GGJ16GDataBase.gip");
     str2017GipSet.insert("CalculateOnLine.gip");
+    str2017GipSet.insert("IGMSPlugin.gip");
 
     QStringList str2017Gip;
-    str2017Gip << "GTJ2017.gip" << "GGJ16GDataBase.gip" << "CalculateOnLine.gip";
+    str2017Gip << "GTJ2017.gip" << "GGJ16GDataBase.gip" << "CalculateOnLine.gip" << "IGMSPlugin.gip";
 
     //Ð´ÎÄ¼þ
     int nFlag = 0;
@@ -247,6 +248,9 @@ void CheckConfigTask::modifyFilesConfig()
         nFlag++;
         writeIni << QString("p%1=").arg(nFlag) << QString("Files\\%1").arg(str2017Gip.at(2)) << endl;
     }
+
+    nFlag++;
+    writeIni << QString("p%1=").arg(nFlag) << QString("Files\\%1").arg(str2017Gip.at(3)) << endl;
 
     for (int i = 0; i < strFileList.count(); ++i)
     {

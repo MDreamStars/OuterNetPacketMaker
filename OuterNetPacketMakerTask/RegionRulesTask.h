@@ -31,6 +31,7 @@ private:
     void copyRulesFile();
     void findFiles(QString& strDir, QStringList& strFilters);
     void addFilePathAndName(QString& strDir, QStringList& strFilters);
+    void removeOldRulesFile();
 private:
     QString m_strInstallPath;
     QString m_strRulesPath;

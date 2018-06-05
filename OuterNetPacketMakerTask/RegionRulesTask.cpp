@@ -59,6 +59,9 @@ RegionRulesTask::~RegionRulesTask()
 */
 bool RegionRulesTask::onExecuteTask(QString& strError)
 {
+    //清空老的规则文件
+    removeOldRulesFile();
+
     //解压规则库文件
     fileType rulesPathType = PacketMakerCommon::checkFileType(m_strRulesPath);
     switch (rulesPathType)
@@ -195,6 +198,33 @@ void RegionRulesTask::addFilePathAndName(QString& strDir, QStringList& strFilter
     {
         QString strFile = strDir + "/" + strFileName;
         m_strRulesFileList.append(strFile);
+    }
+}
+
+void RegionRulesTask::removeOldRulesFile()
+{
+    //获取所有文件
+    QDir rulesDir(m_strExtractPath);
+    QStringList strFilters;
+    strFilters << "*.gip";
+
+    QStringList strFileList = rulesDir.entryList(strFilters, QDir::Files | QDir::Hidden, QDir::Name);
+
+    std::set<QString> str2017GipSet;
+    str2017GipSet.insert("GTJ2017.gip");
+    str2017GipSet.insert("GGJ16GDataBase.gip");
+    str2017GipSet.insert("CalculateOnLine.gip");
+    str2017GipSet.insert("IGMSPlugin.gip");
+
+    for (int i = 0; i < strFileList.count(); ++i)
+    {
+        if (str2017GipSet.find(strFileList.at(i)) != str2017GipSet.end())
+        {
+            continue;
+        }
+
+        QString strFileName = m_strExtractPath + "/" + strFileList.at(i);
+        QDir().remove(strFileName);
     }
 }
 
