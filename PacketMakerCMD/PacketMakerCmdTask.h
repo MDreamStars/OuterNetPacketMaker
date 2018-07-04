@@ -44,7 +44,7 @@ private:
 	void readConfigFile();
 	void readThreadConfig();
 	void executeTask();
-	bool mergePacketMakerParame(QString& strByte, QStringList& strParameterList, PacketMakerConfigInfo& outInfo);
+	bool mergePacketMakerParame(QStringList& strParameterList, PacketMakerConfigInfo& outInfo);
 	void createTask(outPackByte packByte);
 	void executeThread();
 public:

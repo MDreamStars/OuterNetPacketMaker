@@ -233,7 +233,7 @@ void AutomaticPacketMaker::executeTask()
 *@param        QStringList& strParameterList, PacketMakerConfigInfo& outInfo
 *@return       bool
 */
-bool AutomaticPacketMaker::mergePacketMakerParame(QString& strByte, QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
+bool AutomaticPacketMaker::mergePacketMakerParame(QStringList& strParameterList, PacketMakerConfigInfo& outInfo)
 {
 	if (strParameterList.size() < 5)
 	{
@@ -241,7 +241,7 @@ bool AutomaticPacketMaker::mergePacketMakerParame(QString& strByte, QStringList&
 	}
 
 	outInfo.strRulesFilePath = m_oPacketMakerPublicParame.strRulesFilePath;
-	outInfo.strOuterNetPacketName = strParameterList.at(0) + strByte;
+	outInfo.strOuterNetPacketName = strParameterList.at(0);
 	outInfo.bIsCoverInstall = strParameterList.at(1).toLower().compare("true") == 0 ? true : false;
 	outInfo.bIsUninstall = strParameterList.at(2).toLower().compare("true") == 0 ? true : false;
 	outInfo.bIsOnlineSum = strParameterList.at(3).toLower().compare("true") == 0 ? true : false;
@@ -286,7 +286,7 @@ void AutomaticPacketMaker::createTask(outPackByte packByte)
 		packetMakerInfo.strOutPutPath = m_oPacketMakerPublicParame.strOutPutPath + QString("/%1").arg(strByte);
 
 		//组合参数列表
-		if (!mergePacketMakerParame(strByte, strTaskParame, packetMakerInfo))
+		if (!mergePacketMakerParame(strTaskParame, packetMakerInfo))
 		{
 			continue;
 		}

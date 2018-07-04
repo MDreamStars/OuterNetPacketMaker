@@ -170,7 +170,7 @@ OuterNetPacketMaker::OuterNetPacketMaker(QWidget *parent /*= Q_NULLPTR*/)
     m_pSelectRegionRules(nullptr), m_pOutPutPathEdit(nullptr),
     m_pDomainUserNamEdit(nullptr), m_pPassWordEdit(nullptr), m_pCoverInstall(nullptr),
     m_pUninstall(nullptr), m_pOnlineSumCheckBox(nullptr), m_pSaveUserData(nullptr),
-    m_pProgressDlg(nullptr), m_pPacketMakerTask(nullptr)
+    m_pProgressDlg(nullptr), m_pPacketMakerTask(nullptr), m_pVersionEdit(nullptr)
 {
     loadUserInfo();
     iniUI();
@@ -239,9 +239,21 @@ void OuterNetPacketMaker::iniUI()
     pInstallByte->addWidget(m_pX64);
     pInstallGroup->setLayout(pInstallByte);
 
-    pInstallLayout->addWidget(pInputGroup);
-    pInstallLayout->addWidget(pInstallGroup);
+    //版本信息
+    QGroupBox* pInstallVersion = new QGroupBox(Chinese("版本信息"), pPublicGroup);
+    QLabel* pVersion = new QLabel(Chinese("版本号*:"), this);
+    pVersion->setPalette(pa);
+    m_pVersionEdit = new DragDropLineEdit(this);
+    QGridLayout* pVersionLayout = new QGridLayout(this);
 
+    pVersionLayout->addWidget(pVersion,0,0);
+    pVersionLayout->addWidget(m_pVersionEdit,0,1);
+    pInstallVersion->setLayout(pVersionLayout);
+
+    pInstallLayout->addWidget(pInputGroup);
+    pInstallLayout->addWidget(pInstallVersion);
+    pInstallLayout->addWidget(pInstallGroup);
+    
     QGroupBox* pAccountConfig = new QGroupBox(Chinese("域账户信息"), this);
     QGridLayout* pUserDataLayout = new QGridLayout(this);
     //域账户
@@ -353,7 +365,7 @@ void OuterNetPacketMaker::iniUI()
     connect(pSelectBt, SIGNAL(clicked()), this, SLOT(selectRegionRulesBt()));
 
     this->setLayout(pMainLayout);
-    this->setFixedSize(600, 450);
+    this->setFixedSize(600, 500);
 }
 
 /*!
@@ -367,7 +379,8 @@ bool OuterNetPacketMaker::checkInput()
 {
     if (m_pInstallEdit->text().isEmpty() || m_pRulesPathEdit->text().isEmpty() ||
         m_pSelectRegionRules->toPlainText().isEmpty() || m_pOutPutPathEdit->text().isEmpty() ||
-        m_pDomainUserNamEdit->text().isEmpty() || m_pPassWordEdit->text().isEmpty())
+        m_pDomainUserNamEdit->text().isEmpty() || m_pPassWordEdit->text().isEmpty()
+        || m_pVersionEdit->text().isEmpty())
     {
         return false;
     }
@@ -438,25 +451,6 @@ void OuterNetPacketMaker::createTask()
         strByte = Chinese("64位");
     }
 
-    QString strInstallMode = "";
-    if (m_pCoverInstall->isChecked())
-    {
-        strInstallMode = Chinese("覆盖安装");
-    }
-    else if (m_pUninstall->isChecked())
-    {
-        strInstallMode = Chinese("卸载安装");
-    }
-
-    if (m_pOnlineSumCheckBox->isChecked())
-    {
-        strInstallMode += Chinese("包含联机汇总");
-    }
-    else
-    {
-        strInstallMode += Chinese("不包含联机汇总");
-    }
-
     for (int i = 0; i < strRegionList.count(); ++i)
     {
         PacketMakerConfigInfo oPacketParam;
@@ -469,8 +463,19 @@ void OuterNetPacketMaker::createTask()
         oPacketParam.strRegionRules = parsRegionRules(strRegionList.at(i));
         oPacketParam.strUserName = m_pDomainUserNamEdit->text();
         oPacketParam.strUserPassWord = m_pPassWordEdit->text();
-        oPacketParam.strOuterNetPacketName = QString("%1%2%3%4%5").arg("GTJ2018").arg(oPacketParam.strRegionRules).arg(
-            Chinese("规则")).arg(strInstallMode).arg(strByte);
+       
+        if (oPacketParam.bIsOnlineSum)
+        {
+            //带联机汇总
+            oPacketParam.strOuterNetPacketName = QString("%1%2%3%4%5%6").arg(Chinese("GTJ2018安装程序")).arg(m_pVersionEdit->text()).arg(
+                "_").arg(oPacketParam.strRegionRules).arg(Chinese("地区")).arg(Chinese("_联机汇总"));
+        }
+        else
+        {
+            oPacketParam.strOuterNetPacketName = QString("%1%2%3%4%5").arg(Chinese("GTJ2018安装程序")).arg(m_pVersionEdit->text()).arg(
+                "_").arg(oPacketParam.strRegionRules).arg(Chinese("地区"));
+        }
+
         oPacketParam.strOutPutPath = m_pOutPutPathEdit->text() + "/" + strByte;
 
         m_oTaskList.push_back(oPacketParam);

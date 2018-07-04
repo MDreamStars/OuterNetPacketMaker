@@ -126,6 +126,7 @@ private:
     QProgressDialog* m_pProgressDlg;
     QRadioButton* m_pX32;
     QRadioButton* m_pX64;
+    DragDropLineEdit* m_pVersionEdit;
 
     //组包任务列表
     vector<PacketMakerConfigInfo> m_oTaskList;
